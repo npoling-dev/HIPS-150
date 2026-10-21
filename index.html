@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAMU High-Impact Practices (HIPs) Interactive Matrix & Accreditation Engine</title>
+    
+    <!-- Tailwind CSS CDN, Chart.js & Lucide Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tamu: {
+                            maroon: '#500000',
+                            dark: '#3C0000',
+                            light: '#6d0000',
+                            gold: '#C59B27',
+                            goldlight: '#F3E5AB',
+                            slate: '#0F172A'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        .maroon-gradient {
+            background: linear-gradient(135deg, #500000 0%, #3C0000 100%);
+        }
+
+        .gold-glow {
+            box-shadow: 0 0 16px rgba(197, 155, 39, 0.55);
+        }
+
+        /* Filter Match Animation & Highlighting */
+        .is-matching-cell {
+            border: 2px solid #C59B27 !important;
+            background-color: #FFFDF0 !important;
+            box-shadow: 0 0 14px rgba(197, 155, 39, 0.45) !important;
+            opacity: 1 !important;
+            transform: scale(1.005);
+            transition: all 0.25s ease-in-out;
+        }
+
+        .is-dimmed-cell {
+            opacity: 0.25 !important;
+            filter: grayscale(70%);
+            transition: all 0.25s ease-in-out;
+        }
+
+        /* Tag Overlay Badge Styles */
+        .badge-tag {
+            display: inline-flex;
+            align-items: center;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin: 2px;
+            letter-spacing: 0.02em;
+            transition: all 0.15s ease;
+        }
+        .badge-abet { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        .badge-cas { background-color: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+        .badge-b150 { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+        /* Toast Popup Animation */
+        .toast-enter { transform: translateY(100%); opacity: 0; }
+        .toast-show { transform: translateY(0); opacity: 1; }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans text-slate-800 bg-slate-100 antialiased selection:bg-tamu-gold selection:text-tamu-dark">
+
+    <!-- TOP SYSTEM HEADER -->
+    <header class="maroon-gradient text-white border-b-4 border-tamu-gold shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                
+                <!-- Logo & Branding -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-white text-tamu-maroon font-black text-2xl tracking-tighter px-3 py-1 rounded-lg shadow border border-amber-200 shrink-0 select-none">
+                        ATM
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h1 class="text-lg sm:text-xl font-black tracking-tight text-white">High-Impact Practices (HIPs) Matrix</h1>
+                            <span class="text-[10px] bg-tamu-gold text-tamu-dark font-extrabold px-2 py-0.5 rounded uppercase tracking-wider shadow-sm">
+                                Interactive Profile & Accreditation Engine
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-200">
+                            Center for Teaching Excellence • AAC&U Quality Elements • ABET / CAS / Beyond 150 Overlay
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Overlay Mode Switcher -->
+                <div class="flex items-center gap-2 text-xs">
+                    <div class="bg-black/40 backdrop-blur-md border border-tamu-gold/40 rounded-lg p-1.5 flex items-center gap-2">
+                        <span class="text-amber-200 font-bold px-1.5 flex items-center gap-1">
+                            <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+                            Overlay Mode:
+                        </span>
+                        <select id="overlayModeSelect" onchange="handleOverlayModeChange()" class="bg-tamu-dark text-white text-xs font-semibold rounded px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-tamu-gold cursor-pointer border border-tamu-gold/50">
+                            <option value="ALL">🌐 Show All Overlay Badges (ABET + CAS + Beyond 150)</option>
+                            <option value="ABET">🎓 ABET Student Outcomes (SO 1 - SO 7)</option>
+                            <option value="CAS">🏛️ CAS Co-Curricular Domains (1 - 6)</option>
+                            <option value="B150">🚩 TAMU Beyond 150 Strategic Plan</option>
+                            <option value="PEDAGOGICAL">✨ Clean Universal View (External Institutional Adoption)</option>
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- NAVIGATION TABS & GLOBAL SEARCH -->
+    <div class="bg-white border-b border-slate-200 shadow-sm sticky top-[61px] z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 py-2">
+                
+                <!-- Main Navigation Tabs -->
+                <nav class="flex space-x-1 sm:space-x-2 overflow-x-auto pb-1 md:pb-0" id="mainTabs">
+                    <button onclick="switchTab('matrix')" id="tab-matrix" class="tab-btn active inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all text-tamu-maroon bg-slate-100 border-b-2 border-tamu-maroon shadow-sm">
+                        <i data-lucide="grid" class="w-4 h-4"></i>
+                        Interactive HIP Matrix (8 Elements)
+                    </button>
+                    <button onclick="switchTab('diagnostic')" id="tab-diagnostic" class="tab-btn inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-tamu-maroon hover:bg-slate-50">
+                        <i data-lucide="radar" class="w-4 h-4"></i>
+                        Fidelity Diagnostic & Radar Chart
+                    </button>
+                    <button onclick="switchTab('crosswalk')" id="tab-crosswalk" class="tab-btn inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-tamu-maroon hover:bg-slate-50">
+                        <i data-lucide="shield-check" class="w-4 h-4"></i>
+                        Accreditation Filter Engine
+                    </button>
+                    <button onclick="switchTab('builder')" id="tab-builder" class="tab-btn inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-tamu-maroon hover:bg-slate-50">
+                        <i data-lucide="file-code" class="w-4 h-4"></i>
+                        Syllabus & Canvas Export Wizard
+                    </button>
+                </nav>
+
+                <!-- Search Input -->
+                <div class="relative min-w-[260px] max-w-xs">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="globalSearch" oninput="handleSearch()" placeholder="Search ethics, ABET, reflection..." 
+                           class="w-full pl-9 pr-8 py-1.5 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tamu-maroon focus:bg-white transition-all">
+                    <button onclick="clearSearch()" id="btnClearSearch" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold">✕</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ACTIVE FILTER STATUS BANNER -->
+        <div id="filterStatusBanner" class="hidden mb-6 bg-gradient-to-r from-tamu-maroon to-tamu-dark text-white p-4 rounded-xl shadow-lg border-2 border-tamu-gold flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl shrink-0">🎯</span>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-black uppercase tracking-wider bg-tamu-gold text-tamu-dark px-2 py-0.5 rounded" id="bannerFilterBadge">ACTIVE FILTER</span>
+                        <h3 class="text-sm font-bold text-amber-200" id="bannerFilterTitle">Filter Title</h3>
+                    </div>
+                    <p class="text-xs text-slate-200 mt-0.5" id="bannerFilterDesc">Highlighting matching matrix cells across all views.</p>
+                </div>
+            </div>
+            <button onclick="clearAccreditationFilter()" class="shrink-0 bg-white text-tamu-maroon font-extrabold text-xs px-4 py-2 rounded-lg hover:bg-amber-100 transition-colors shadow flex items-center gap-1.5">
+                <span>✕</span> Reset Filter (Show All Cells)
+            </button>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- VIEW 1: INTERACTIVE HIP MATRIX (8 CELLS)   -->
+        <!-- ========================================== -->
+        <section id="view-matrix" class="space-y-6">
+            <div class="bg-amber-50 border-l-4 border-tamu-gold p-4 rounded-r-xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-start gap-3">
+                    <span class="text-xl shrink-0">💡</span>
+                    <div>
+                        <h3 class="text-sm font-bold text-amber-900">AAC&U High-Impact Practices Course Matrix</h3>
+                        <p class="text-xs text-amber-800">
+                            Click any element cell below to inspect disciplinary exemplars, select fidelity levels, or view mapped ABET outcomes, CAS domains, and Beyond 150 strategic plan tactics.
+                        </p>
+                    </div>
+                </div>
+                <button onclick="switchTab('diagnostic')" class="shrink-0 bg-tamu-maroon text-white text-xs font-bold px-3.5 py-2 rounded-lg hover:bg-tamu-dark transition-colors shadow flex items-center gap-1.5">
+                    <i data-lucide="radar" class="w-3.5 h-3.5"></i> Launch Radar Diagnostic
+                </button>
+            </div>
+
+            <!-- Matrix Grid Container -->
+            <div class="overflow-x-auto pb-4">
+                <div class="min-w-[950px] space-y-6" id="matrixGridContainer">
+                    <!-- Populated dynamically by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 2: FIDELITY DIAGNOSTIC & RADAR CHART  -->
+        <!-- ========================================== -->
+        <section id="view-diagnostic" class="hidden space-y-6">
+            
+            <!-- Sticky Score & Scope Header Bar -->
+            <div class="bg-slate-900 text-white border-b border-slate-800 rounded-xl p-4 shadow-md sticky top-[125px] z-20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="bg-tamu-maroon text-white text-xs font-bold px-2 py-0.5 rounded border border-tamu-gold">TAMU CTE / C4G</span>
+                        <h2 class="text-lg font-bold tracking-tight text-white m-0">Course Fidelity Self-Diagnostic</h2>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-0.5 m-0">Select fidelity scores (0 = None, 1 = Foundational, 2 = Applied, 3 = Integrated) to update radar footprint.</p>
+                </div>
+                
+                <!-- Target Score Banner -->
+                <div id="scoreSummaryBanner" class="bg-slate-800 border border-slate-700 rounded-lg p-3 flex items-center gap-4 w-full sm:w-auto justify-between">
+                    <div>
+                        <div class="text-[10px] uppercase font-bold text-slate-400">Total Score</div>
+                        <div class="text-2xl font-black text-white" id="totalScoreText">0 <span class="text-xs font-normal text-slate-400">/ 24</span></div>
+                    </div>
+                    <div class="h-8 w-px bg-slate-700"></div>
+                    <div class="text-right">
+                        <div class="text-[10px] uppercase font-bold text-slate-400">Scope & Governance Tier</div>
+                        <div id="scopeBadge" class="text-xs font-bold px-2.5 py-1 rounded bg-slate-700 text-slate-300 mt-0.5 inline-block">
+                            Below Threshold (&lt; 8 pts)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid Layout: Left Controls (7 cols), Right Radar Graphic (5 cols) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                <!-- Left Column: Quadrants & Scorer Controls -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2 m-0">
+                            <i data-lucide="sliders" class="w-5 h-5 text-tamu-maroon"></i>
+                            Evaluate 8 Quality Elements
+                        </h3>
+                        <button onclick="resetScores()" class="text-xs font-bold text-slate-500 hover:text-red-600 flex items-center gap-1 transition-colors cursor-pointer border-0 bg-transparent">
+                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset All Scores
+                        </button>
+                    </div>
+
+                    <div id="quadrantsDiagnosticContainer" class="space-y-6">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+
+                <!-- Right Column: Radar Chart Card & Governance Thresholds -->
+                <div class="lg:col-span-5 space-y-6">
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 sticky top-[210px]">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-bold text-slate-900 flex items-center gap-2 m-0 text-sm">
+                                <i data-lucide="radar" class="w-4 h-4 text-tamu-maroon"></i>
+                                Fidelity Profile Visualization
+                            </h3>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase">8 Quality Dimensions</span>
+                        </div>
+
+                        <!-- Radar Canvas Container -->
+                        <div class="relative aspect-square w-full">
+                            <canvas id="hipsRadarChart"></canvas>
+                        </div>
+
+                        <!-- Quadrant Legend -->
+                        <div class="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-100 text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+                                <span class="text-slate-600 font-medium">A: Engagement & Mentorship</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                                <span class="text-slate-600 font-medium">B: Challenge & Rigor</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+                                <span class="text-slate-600 font-medium">C: Integration & Growth</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-sky-600"></span>
+                                <span class="text-slate-600 font-medium">D: Impact & Dissemination</span>
+                            </div>
+                        </div>
+
+                        <!-- Scope Threshold Reference -->
+                        <div class="mt-5 bg-slate-50 rounded-lg p-3 border border-slate-200 text-xs space-y-2">
+                            <div class="font-bold text-slate-800 uppercase tracking-wider text-[11px]">Target Score Benchmarks:</div>
+                            <div class="flex justify-between items-center text-slate-600">
+                                <span>8 – 13 Points:</span>
+                                <span class="font-semibold text-slate-900">Scope 1 (Internal / Instructor Safety Net)</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-600">
+                                <span>14 – 19 Points:</span>
+                                <span class="font-semibold text-slate-900">Scope 2 (Campus/Community / Partner Agreement)</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-600">
+                                <span>20 – 24 Points:</span>
+                                <span class="font-semibold text-slate-900">Scope 3 (External / Institutional Protocol)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 3: ACCREDITATION FILTER ENGINE        -->
+        <!-- ========================================== -->
+        <section id="view-crosswalk" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+                
+                <div class="border-b border-slate-200 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div>
+                        <h3 class="text-lg font-black text-tamu-maroon flex items-center gap-2">
+                            <i data-lucide="shield-check" class="w-5 h-5"></i>
+                            ABET, CAS & Beyond 150 Compliance Crosswalk Filter Engine
+                        </h3>
+                        <p class="text-xs text-slate-600 mt-1">
+                            Click any outcome button below to scan and highlight matching HIPs quality elements across the matrix.
+                        </p>
+                    </div>
+                    <button onclick="clearAccreditationFilter()" class="shrink-0 text-xs bg-slate-100 hover:bg-tamu-maroon hover:text-white text-slate-700 font-bold px-3.5 py-2 rounded-lg border border-slate-300 transition-all flex items-center gap-1.5 shadow-sm">
+                        <span>✕</span> Reset Active Filter
+                    </button>
+                </div>
+
+                <!-- FILTER BUTTON GROUPS -->
+                <div class="space-y-5">
+                    
+                    <!-- ABET Group -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black uppercase tracking-wider text-tamu-maroon flex items-center gap-1.5">
+                                🎓 ABET Engineering Student Outcomes (SO 1 - SO 7):
+                            </span>
+                            <span class="text-[10px] text-slate-500 font-medium">Click to highlight matches</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2 pt-1" id="abetFilterButtons"></div>
+                    </div>
+                    
+                    <!-- CAS Group -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                                🏛️ CAS Co-Curricular Development Domains (1 - 6):
+                            </span>
+                            <span class="text-[10px] text-slate-500 font-medium">Click to highlight matches</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2 pt-1" id="casFilterButtons"></div>
+                    </div>
+
+                    <!-- Beyond 150 Group -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                                🚩 Beyond 150 Strategic Plan Priorities:
+                            </span>
+                            <span class="text-[10px] text-slate-500 font-medium">Click to highlight matches</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2 pt-1" id="b150FilterButtons"></div>
+                    </div>
+                </div>
+
+                <!-- MATCHING RESULTS SUMMARY HEADER -->
+                <div id="crosswalkSummary" class="bg-amber-50/60 border border-amber-200/80 p-4 rounded-xl flex items-center justify-between">
+                    <span class="text-xs sm:text-sm font-medium text-amber-900">Select an outcome button above to filter matrix cells.</span>
+                </div>
+
+                <!-- MATCHING RESULTS GRID -->
+                <div id="crosswalkGridContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2"></div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 4: SYLLABUS & CANVAS EXPORT WIZARD    -->
+        <!-- ========================================== -->
+        <section id="view-builder" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- INPUT FORM (LEFT 5 COLS) -->
+                <div class="lg:col-span-5 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+                    <div class="border-b border-slate-200 pb-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-base font-bold text-tamu-maroon flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-5 h-5"></i>
+                                Syllabus & Export Generator
+                            </h3>
+                            <span class="text-[10px] bg-tamu-gold text-tamu-dark font-extrabold px-2 py-0.5 rounded uppercase">Step-by-Step</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">Configure parameters to generate copy-paste syllabus text, Canvas HTML code, and backend accreditation payload.</p>
+                    </div>
+
+                    <form id="builderForm" class="space-y-4" onsubmit="event.preventDefault(); generateAllOutputs();">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Course Code or Title</label>
+                            <input type="text" id="exportCourseTitle" value="ENGR 482 / C4G 101: Ethics & Public Service" placeholder="e.g. ENGR 482" required
+                                   oninput="generateAllOutputs()"
+                                   class="w-full text-xs sm:text-sm p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tamu-maroon focus:outline-none transition-all">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Target Quality Element</label>
+                                <select id="exportElementSelect" onchange="generateAllOutputs()" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tamu-maroon focus:outline-none bg-white font-medium">
+                                    <!-- Populated via JS -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Target Tier</label>
+                                <select id="exportTierSelect" onchange="generateAllOutputs()" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tamu-maroon focus:outline-none bg-white font-medium">
+                                    <option value="foundational">Foundational (Level 1)</option>
+                                    <option value="applied" selected>Applied (Level 2)</option>
+                                    <option value="integrated">Integrated (Level 3)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Disciplinary Context</label>
+                            <select id="exportTrackSelect" onchange="generateAllOutputs()" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tamu-maroon focus:outline-none bg-white font-medium">
+                                <option value="stem" selected>STEM Track (Engineering / Computing / Science)</option>
+                                <option value="nonstem">Non-STEM Track (Humanities / Business / Social Sciences)</option>
+                                <option value="cocurricular">Co-Curricular Track (Student Life / Leadership / C4G)</option>
+                            </select>
+                        </div>
+
+                        <button type="button" onclick="generateAllOutputs()" class="w-full bg-tamu-maroon text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg hover:bg-tamu-dark transition-all shadow-md flex items-center justify-center gap-2">
+                            <i data-lucide="zap" class="w-4 h-4"></i> Generate Syllabus, Canvas & Accreditation Bundle
+                        </button>
+                    </form>
+                </div>
+
+                <!-- OUTPUT PANELS (RIGHT 7 COLS) -->
+                <div class="lg:col-span-7 space-y-6">
+                    
+                    <!-- Comprehensive Printable Report Summary Card -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                    <i data-lucide="printer" class="w-4 h-4 text-tamu-maroon"></i>
+                                    Comprehensive Accreditation & Course Summary Report
+                                </h4>
+                                <p class="text-[11px] text-slate-500">Bundled fidelity score, scope tier, radar summary, and itemized ABET/CAS/B150 checklists</p>
+                            </div>
+                            <button onclick="copyToClipboard('reportSummaryCode')" class="text-xs bg-slate-100 hover:bg-tamu-maroon hover:text-white border border-slate-300 px-3 py-1.5 rounded-lg transition-all font-bold flex items-center gap-1.5 shadow-sm">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy Full Report
+                            </button>
+                        </div>
+
+                        <pre id="reportSummaryCode" class="p-4 bg-slate-900 text-slate-100 rounded-lg text-xs font-mono overflow-x-auto whitespace-pre-wrap border border-slate-800 max-h-60 leading-relaxed"></pre>
+                    </div>
+
+                    <!-- Canvas Snippet Preview Card -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                    <i data-lucide="code" class="w-4 h-4 text-tamu-maroon"></i>
+                                    Canvas LMS HTML Snippet
+                                </h4>
+                                <p class="text-[11px] text-slate-500">Copy into Canvas HTML Editor for student-facing syllabus callout</p>
+                            </div>
+                            <button onclick="copyToClipboard('canvasSnippetCode')" class="text-xs bg-slate-100 hover:bg-tamu-maroon hover:text-white border border-slate-300 px-3 py-1.5 rounded-lg transition-all font-bold flex items-center gap-1.5 shadow-sm">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy HTML Snippet
+                            </button>
+                        </div>
+
+                        <div class="border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
+                            <div class="bg-tamu-maroon text-white px-4 py-2.5 text-xs font-bold flex items-center justify-between">
+                                <span>Texas A&M High-Impact Course Framework</span>
+                                <span class="text-[10px] bg-amber-400 text-tamu-dark px-2 py-0.5 rounded font-black uppercase" id="previewBadgeTier">APPLIED</span>
+                            </div>
+                            <div class="p-4 space-y-3 bg-white" id="canvasVisualPreview"></div>
+                        </div>
+
+                        <details class="text-xs">
+                            <summary class="cursor-pointer font-bold text-slate-600 hover:text-tamu-maroon py-1">View Raw Canvas HTML Code</summary>
+                            <pre id="canvasSnippetCode" class="mt-2 p-3 bg-slate-900 text-slate-200 rounded-lg text-[11px] font-mono overflow-x-auto whitespace-pre-wrap border border-slate-800 max-h-40"></pre>
+                        </details>
+                    </div>
+
+                    <!-- Backend JSON Payload Card -->
+                    <div class="bg-slate-900 text-slate-100 p-6 rounded-xl shadow-md space-y-4 border border-slate-800">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <div>
+                                <h4 class="text-sm font-bold text-amber-300 flex items-center gap-2">
+                                    <i data-lucide="database" class="w-4 h-4"></i>
+                                    Accreditation Compliance JSON Payload
+                                </h4>
+                                <p class="text-[11px] text-slate-400">Export structure for Provost, SACSCOC & Departmental Accreditation Audit</p>
+                            </div>
+                            <button onclick="copyToClipboard('jsonPayloadCode')" class="text-xs bg-slate-800 hover:bg-amber-400 hover:text-tamu-dark border border-slate-700 px-3 py-1.5 rounded-lg transition-all font-bold text-amber-300 flex items-center gap-1.5">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy JSON Payload
+                            </button>
+                        </div>
+                        <pre id="jsonPayloadCode" class="p-3 bg-slate-950 text-emerald-400 rounded-lg text-xs font-mono overflow-x-auto whitespace-pre-wrap border border-slate-800 max-h-48"></pre>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- DRILL-DOWN INSPECTOR DRAWER MODAL -->
+    <div id="cellDrawerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex justify-end transition-opacity">
+        <div class="bg-white w-full max-w-2xl h-full shadow-2xl flex flex-col justify-between overflow-hidden">
+            
+            <!-- Drawer Header -->
+            <div class="p-5 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span id="drawerQuadrantBadge" class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-tamu-maroon text-white">QUADRANT</span>
+                        <span id="drawerB150Badge" class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-tamu-gold text-tamu-dark">BEYOND 150</span>
+                    </div>
+                    <h3 id="drawerTitle" class="text-lg font-bold text-amber-200 mt-1">Element Title</h3>
+                </div>
+                <button onclick="closeDrawer()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors text-lg font-bold border-0 bg-transparent cursor-pointer">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Drawer Body Scrollable -->
+            <div class="p-6 overflow-y-auto space-y-6 flex-1">
+                
+                <!-- Institutional Rationale Callout -->
+                <div class="bg-amber-50 border-l-4 border-tamu-gold p-4 rounded-r-lg">
+                    <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wider mb-1">Beyond 150 Strategic Alignment & Rationale</h4>
+                    <p id="drawerRationale" class="text-sm font-semibold text-amber-950 leading-relaxed m-0"></p>
+                </div>
+
+                <!-- Active Level Selector inside Drawer -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Select Active Level to Inspect</label>
+                    <div class="grid grid-cols-3 gap-2" id="drawerLevelSelector">
+                        <!-- Buttons rendered via JS -->
+                    </div>
+                </div>
+
+                <!-- Descriptor Box -->
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-slate-700 uppercase tracking-wide">Fidelity Matrix Descriptor</span>
+                        <span id="drawerLevelBadge" class="text-xs font-bold px-2 py-0.5 rounded bg-indigo-100 text-indigo-800">Foundational</span>
+                    </div>
+                    <p id="drawerDescriptor" class="text-sm text-slate-800 font-medium leading-relaxed m-0"></p>
+                </div>
+
+                <!-- Mapped Accreditation Codes Badge Container -->
+                <div class="border border-slate-200 rounded-xl p-4 bg-white space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-800 m-0">Mapped Accreditation & Strategic Plan Codes</h4>
+                    <div class="flex flex-wrap gap-2" id="drawerBadgesContainer">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+
+                <!-- Disciplinary Exemplars -->
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-800 m-0">Disciplinary Exemplars</h4>
+                    
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs">
+                        <div class="font-bold text-tamu-maroon mb-1">🔬 STEM Track (Engineering & Science):</div>
+                        <p id="drawerExemplarStem" class="text-slate-700 m-0 leading-relaxed"></p>
+                    </div>
+
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs">
+                        <div class="font-bold text-tamu-maroon mb-1">📚 Non-STEM Track (Humanities & Business):</div>
+                        <p id="drawerExemplarNonStem" class="text-slate-700 m-0 leading-relaxed"></p>
+                    </div>
+
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs">
+                        <div class="font-bold text-tamu-maroon mb-1">🏛️ Co-Curricular Track (Student Life & C4G):</div>
+                        <p id="drawerExemplarCocurricular" class="text-slate-700 m-0 leading-relaxed"></p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Drawer Footer -->
+            <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center">
+                <button onclick="sendDrawerToExport()" class="px-4 py-2 bg-tamu-maroon hover:bg-tamu-dark text-white text-xs font-bold rounded-lg transition-colors border-0 cursor-pointer flex items-center gap-1.5">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i> Send to Export Wizard
+                </button>
+                <button onclick="closeDrawer()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition-colors border-0 cursor-pointer">
+                    Done & Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastNotification" class="fixed bottom-5 right-5 bg-slate-900 text-white border border-tamu-gold px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 toast-enter transition-all duration-300 pointer-events-none">
+        <span class="text-xl">📋</span>
+        <div>
+            <div id="toastTitle" class="text-xs font-bold text-amber-300">Copied to Clipboard</div>
+            <div id="toastDesc" class="text-[11px] text-slate-300">Snippet ready to paste into Canvas.</div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC ENGINE -->
+    <script>
+        // GLOBAL STATE & DATA ARCHITECTURE
+        let activeOverlayMode = "ALL"; // ALL, ABET, CAS, B150, PEDAGOGICAL
+        let activeAccreditationFilter = null; // e.g. "ABET 2", "CAS 5", "B150: 3.4.1"
+        let currentScores = {
+            interactions: 2,
+            feedback: 2,
+            time_effort: 2,
+            expectations: 2,
+            diversity: 1,
+            reflection: 2,
+            real_world: 2,
+            demonstration: 1
+        };
+        let activeDrawerElementId = null;
+        let hipsRadarChartInstance = null;
+
+        // ABET General Criteria Outcomes
+        const ABET_OUTCOMES = {
+            "ABET 1": "SO 1: Complex Problem Solving",
+            "ABET 2": "SO 2: Engineering Design & Societal Factors",
+            "ABET 3": "SO 3: Effective Communication",
+            "ABET 4": "SO 4: Ethics & Professional Responsibilities",
+            "ABET 5": "SO 5: Teamwork & Leadership",
+            "ABET 6": "SO 6: Experimentation & Data Analysis",
+            "ABET 7": "SO 7: Acquire & Apply New Knowledge"
+        };
+
+        // CAS Student Development Domains
+        const CAS_DOMAINS = {
+            "CAS 1": "Domain 1: Knowledge Acquisition & Application",
+            "CAS 2": "Domain 2: Cognitive Complexity",
+            "CAS 3": "Domain 3: Intrapersonal Development",
+            "CAS 4": "Domain 4: Interpersonal Competence",
+            "CAS 5": "Domain 5: Humanitarianism & Civic Engagement",
+            "CAS 6": "Domain 6: Practical Competence"
+        };
+
+        // Beyond 150 Tactics
+        const B150_TACTICS = {
+            "B150: 3.1.6": "Tactic 3.1.6: Mentorship & Student Success",
+            "B150: 3.2.3": "Tactic 3.2.3: Evidence-Based Pedagogy & Rigor",
+            "B150: 3.2.5": "Tactic 3.2.5: Course Analytics & Feedback",
+            "B150: 3.4.1": "Tactic 3.4.1: Transcripted Experiential Requirement",
+            "B150: 3.4.2": "Tactic 3.4.2: Citizens for Good Credential",
+            "B150: 3.4.3": "Tactic 3.4.3: Applied Industry Learning",
+            "B150: 3.4.7": "Tactic 3.4.7: Identity Formation & Badging",
+            "B150: 12.1": "Tactic 12.1: Belonging & Traditions",
+            "B150: 12.2.1": "Tactic 12.2.1: Signature Service & Force for Good",
+            "B150: 12.2.4": "Tactic 12.2.4: Storytelling & Public Impact"
+        };
+
+        // 8 QUALITY ELEMENTS ACROSS 4 QUADRANTS
+        const HIPS_DATA = [
+            {
+                quadrant: "QUADRANT A: ENGAGEMENT & MENTORSHIP",
+                elements: [
+                    {
+                        id: "interactions",
+                        title: "1. Faculty & Peer Interactions",
+                        rationale: "Teaching Excellence & Mentorship: High mentorship density deepens student belonging, leadership, and lifelong network affinity.",
+                        b150_ref: "Pillar 3 (Tactic 3.1.6) & Pillar 12 (Tactic 12.1)",
+                        tiers: {
+                            foundational: {
+                                score: 1,
+                                title: "Foundational (Introduce)",
+                                desc: "Faculty-led modeling with structured peer-review protocols focused on establishing clear foundational criteria.",
+                                abet: ["ABET 5", "ABET 3"],
+                                cas: ["CAS 4", "CAS 3"],
+                                b150: ["B150: 3.1.6"],
+                                exemplars: {
+                                    stem: "Paired code review sprints adhering to industry-standard peer debugging checklists.",
+                                    nonstem: "Triad writing workshops evaluating essay introductions against formal historiographical rubrics.",
+                                    cocurricular: "Team charter orientation drafting ground rules and practicing introductory peer feedback scenarios."
+                                }
+                            },
+                            applied: {
+                                score: 2,
+                                title: "Applied (Practice / Apply)",
+                                desc: "Iterative collaboration where peers provide formative critique and faculty operates as an expert consultant.",
+                                abet: ["ABET 5", "ABET 3"],
+                                cas: ["CAS 4", "CAS 6"],
+                                b150: ["B150: 3.1.6", "B150: 12.1"],
+                                exemplars: {
+                                    stem: "Weekly studio pin-up sessions presenting hydraulic modeling data to faculty and peer design teams.",
+                                    nonstem: "Collaborative workshop revising survey items based on pilot test feedback from campus focus groups.",
+                                    cocurricular: "Executing multi-stage campus event planning with advisors acting as executive consultants."
+                                }
+                            },
+                            integrated: {
+                                score: 3,
+                                title: "Integrated (Co-Create / Transform)",
+                                desc: "Sustained partnership where students and faculty/partners co-author research, design products, or lead institutional initiatives.",
+                                abet: ["ABET 5", "ABET 3", "ABET 7"],
+                                cas: ["CAS 4", "CAS 3", "CAS 6"],
+                                b150: ["B150: 3.1.6", "B150: 12.1", "B150: 12.2.1"],
+                                exemplars: {
+                                    stem: "Co-authoring peer-reviewed conference publications or patent applications with research faculty.",
+                                    nonstem: "Co-designing municipal policy briefs presented directly to city council committees.",
+                                    cocurricular: "Directing campus-wide service traditions in partnership with executive university leaders."
+                                }
+                            }
+                        }
+                    },
+                    {
+                        id: "feedback",
+                        title: "2. Iterative Feedback",
+                        rationale: "Evidence-Based Pedagogy & Student Agency: Continuous formative critique reduces D-F-W rates and supports self-regulation.",
+                        b150_ref: "Pillar 3 (Tactics 3.1.4 & 3.2.5)",
+                        tiers: {
+                            foundational: {
+                                score: 1,
+                                title: "Foundational (Introduce)",
+                                desc: "Formative feedback focuses on baseline accuracy, alignment with modeled rubrics, and core skill acquisition.",
+                                abet: ["ABET 6", "ABET 7"],
+                                cas: ["CAS 2", "CAS 6"],
+                                b150: ["B150: 3.2.5"],
+                                exemplars: {
+                                    stem: "Automated unit test execution and instructor annotations on weekly coding problem sets.",
+                                    nonstem: "Instructor margin notes on initial draft outlines evaluating argument structure.",
+                                    cocurricular: "Weekly reflection logs reviewed by peer mentors with structured rubric comments."
+                                }
+                            },
+                            applied: {
+                                score: 2,
+                                title: "Applied (Practice / Apply)",
+                                desc: "Feedback focuses on the application of theoretical models to live scenarios and the depth of student revisions.",
+                                abet: ["ABET 6", "ABET 7"],
+                                cas: ["CAS 2", "CAS 6"],
+                                b150: ["B150: 3.2.5", "B150: 3.2.3"],
+                                exemplars: {
+                                    stem: "Milestone design reviews analyzing trade-offs in structural calculation iterations.",
+                                    nonstem: "Draft revision cycles incorporating feedback from live business client presentations.",
+                                    cocurricular: "Mid-project advisor debriefs adjusting project scope based on community partner inputs."
+                                }
+                            },
+                            integrated: {
+                                score: 3,
+                                title: "Integrated (Co-Create / Transform)",
+                                desc: "Feedback evaluates long-term ethical implications, public reach, and systemic impact of student deliverables.",
+                                abet: ["ABET 4", "ABET 6", "ABET 7"],
+                                cas: ["CAS 2", "CAS 3", "CAS 6"],
+                                b150: ["B150: 3.2.5", "B150: 12.2.1"],
+                                exemplars: {
+                                    stem: "External engineering board reviews evaluating compliance, safety, and operational longevity.",
+                                    nonstem: "Peer-reviewed journal revision workflows responding to external editorial board critiques.",
+                                    cocurricular: "Longitudinal community impact audits conducted with municipal oversight committees."
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                quadrant: "QUADRANT B: CHALLENGE & RIGOR",
+                elements: [
+                    {
+                        id: "time_effort",
+                        title: "3. Significant Time & Effort",
+                        rationale: "Transcripted Experiential Learning: High time-on-task directly accelerates degree progress and fulfills experiential mandates.",
+                        b150_ref: "Pillar 3 (Tactic 3.4.1 & Retention KPIs)",
+                        tiers: {
+                            foundational: {
+                                score: 1,
+                                title: "Foundational (Introduce)",
+                                desc: "Consistent engagement over a term (<20 out-of-class hours); focus on establishing workflow habits and time management.",
+                                abet: ["ABET 1", "ABET 5"],
+                                cas: ["CAS 6", "CAS 3"],
+                                b150: ["B150: 3.4.1"],
+                                exemplars: {
+                                    stem: "Structured weekly lab bench hours dedicated to preliminary sample preparation.",
+                                    nonstem: "Weekly archive research hours dedicated to primary source collection.",
+                                    cocurricular: "10-15 semester hours serving with a student organization planning team."
+                                }
+                            },
+                            applied: {
+                                score: 2,
+                                title: "Applied (Practice / Apply)",
+                                desc: "Sustained intensity with significant out-of-class commitment (40-80 hours) dedicated to iterative project development.",
+                                abet: ["ABET 1", "ABET 5"],
+                                cas: ["CAS 6", "CAS 3"],
+                                b150: ["B150: 3.4.1"],
+                                exemplars: {
+                                    stem: "40+ hours in capstone laboratory prototyping and CAD stress analysis.",
+                                    nonstem: "Semester-long consulting project requiring 50+ hours of client interviews and data analysis.",
+                                    cocurricular: "40+ hours leading logistics and volunteer management for large campus service events."
+                                }
+                            },
+                            integrated: {
+                                score: 3,
+                                title: "Integrated (Co-Create / Transform)",
+                                desc: "Deep, immersive investment (100+ hours); students manage complex multi-term timelines and competing priorities.",
+                                abet: ["ABET 1", "ABET 5", "ABET 7"],
+                                cas: ["CAS 6", "CAS 3"],
+                                b150: ["B150: 3.4.1", "B150: 3.4.3"],
+                                exemplars: {
+                                    stem: "Multi-semester research thesis or senior design project spanning 120+ hours of bench and field testing.",
+                                    nonstem: "Year-long community organization incubator management demanding 100+ hours of client engagement.",
+                                    cocurricular: "Full-year executive leadership role managing university-wide student initiatives."
+                                }
+                            }
+                        }
+                    },
+                    {
+                        id: "expectations",
+                        title: "4. High Performance Expectations",
+                        rationale: "Teaching Excellence & Degree Integrity: Rigorous standards validate workforce readiness and protect institutional degree value.",
+                        b150_ref: "Pillar 3 (Tactics 3.2.3 & 3.5.3)",
+                        tiers: {
+                            foundational: {
+                                score: 1,
+                                title: "Foundational (Introduce)",
+                                desc: "Students identify and follow modeled professional standards to complete structured academic tasks.",
+                                abet: ["ABET 4", "ABET 1"],
+                                cas: ["CAS 1", "CAS 3"],
+                                b150: ["B150: 3.2.3"],
+                                exemplars: {
+                                    stem: "Adhering strictly to lab safety protocols and standard IEEE code documentation guidelines.",
+                                    nonstem: "Formatting research reports according to formal Chicago or APA publication standards.",
+                                    cocurricular: "Following organizational event safety guidelines and fiscal reporting rules."
+                                }
+                            },
+                            applied: {
+                                score: 2,
+                                title: "Applied (Practice / Apply)",
+                                desc: "Students apply disciplinary standards to solve semi-structured problems with increasing autonomy.",
+                                abet: ["ABET 4", "ABET 1"],
+                                cas: ["CAS 1", "CAS 6"],
+                                b150: ["B150: 3.2.3", "B150: 3.5.3"],
+                                exemplars: {
+                                    stem: "Designing electrical schematics complying with national safety codes without direct templates.",
+                                    nonstem: "Conducting financial valuations applying industry-standard discounted cash flow models.",
+                                    cocurricular: "Managing budget allocations adhering to university audit and compliance requirements."
+                                }
+                            },
+                            integrated: {
+                                score: 3,
+                                title: "Integrated (Co-Create / Transform)",
+                                desc: "Students negotiate and define professional criteria for original, unscripted industry or community outcomes.",
+                                abet: ["ABET 4", "ABET 1", "ABET 2"],
+                                cas: ["CAS 1", "CAS 3", "CAS 6"],
+                                b150: ["B150: 3.2.3", "B150: 3.5.3"],
+                                exemplars: {
+                                    stem: "Authoring original quality-assurance testing protocols adopted by an industry capstone sponsor.",
+                                    nonstem: "Establishing formal ethics review guidelines for a client marketing campaign.",
+                                    cocurricular: "Drafting institutional constitution amendments adopted by university governance bodies."
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                quadrant: "QUADRANT C: INTEGRATION & GROWTH",
+                elements: [
+                    {
+                        id: "diversity",
+                        title: "5. Experiences with Diversity",
+                        rationale: "Global & Civic Competence: Equips students with adaptable, cross-cultural leadership skills for complex global environments.",
+                        b150_ref: "Pillar 3 (Pillar Intro) & Pillar 12 (Objective 12.2)",
+                        tiers: {
+                            foundational: {
+                                score: 1,
+                                title: "Foundational (Introduce)",
+                                desc: "Exposure to diverse perspectives through guided readings, guest lectures, or initial cross-cultural contact.",
+                                abet: ["ABET 2", "ABET 4"],
+                                cas: ["CAS 5", "CAS 4"],
+                                b150: ["B150: 12.2"],
+                                exemplars: {
+                                    stem: "Analyzing case studies on environmental justice and technology distribution in low-income regions.",
+                                    nonstem: "Reading global perspectives on economic development in international trade courses.",
+                                    cocurricular: "Attending cultural intelligence workshops during student leadership onboarding."
+                                }
+                            },
+                            applied: {
+                                score: 2,
+                                title: "Applied (Practice / Apply)",
+                                desc: "Direct engagement with differing viewpoints through project-based team work with diverse stakeholder groups.",
+                                abet: ["ABET 2", "ABET 4"],
+                                cas: ["CAS 5", "CAS 4"],
+                                b150: ["B150: 12.2", "B150: 12.2.1"],
+                                exemplars: {
+                                    stem: "Adapting engineering software interfaces for non-English speaking community end-users.",
+                                    nonstem: "Co-designing marketing strategies tailored for multicultural consumer demographics.",
+                                    cocurricular: "Facilitating dialogue circles across diverse campus student organizations."
+                                }
+                            },
+                            integrated: {
+                                score: 3,
+                                title: "Integrated (Co-Create / Transform)",
+                                desc: "Transformation through sustained, direct partnership in unfamiliar, complex, or global community environments.",
+                                abet: ["ABET 2", "ABET 4", "ABET 5"],
+                                cas: ["CAS 5", "CAS 4", "CAS 3"],
+                                b150: ["B150: 12.2", "B150: 12.2.1"],
+                                exemplars: {
+                                    stem: "Co-designing water filtration systems on-site in rural international communities.",
+                                    nonstem: "Managing semester-long immersion projects with underserved community non-profits.",
+                                    cocurricular: "Leading cross-cultural coalition initiatives addressing systemic regional service gaps."
+                                }
+                            }
+                        }
+                    },
+                    {
+                        id: "reflection",
+                        title: "6. Structured Reflection",
+                        rationale: "Identity Formation & Portable Credentials: Connects experiential outcomes to identity formation, career readiness, and badging.",
+                        b150_ref: "Pillar 3 (Tactics 3.4.2 & 3.4.7)",
+                        tiers: {
+                            foundational: {
+                                score: 1,
+                                title: "Foundational (Introduce)",
+                                desc: "Descriptive reflection: 'What happened and how does it connect to my initial career goals?'",
+                                abet: ["ABET 4", "ABET 7"],
+                                cas: ["CAS 3", "CAS 2"],
+                                b150: ["B150: 3.4.7"],
+                                exemplars: {
+                                    stem: "Writing weekly reflective lab journal entries connecting experiments to industry roles.",
+                                    nonstem: "Submitting guided reflections connecting class lectures to current economic news.",
+                                    cocurricular: "Completing post-event self-evaluations analyzing personal time management."
+                                }
+                            },
+                            applied: {
+                                score: 2,
+                                title: "Applied (Practice / Apply)",
+                                desc: "Integrative reflection: 'How am I adapting my skills to solve real problems in this specific context?'",
+                                abet: ["ABET 4", "ABET 7"],
+                                cas: ["CAS 3", "CAS 2"],
+                                b150: ["B150: 3.4.7", "B150: 3.4.2"],
+                                exemplars: {
+                                    stem: "Analyzing project failures using STAR method reflection logs during senior design.",
+                                    nonstem: "Synthesizing client feedback into a metacognitive report on professional growth.",
+                                    cocurricular: "Constructing an ePortfolio reflecting on leadership competency development."
+                                }
+                            },
+                            integrated: {
+                                score: 3,
+                                title: "Integrated (Co-Create / Transform)",
+                                desc: "Metacognitive reflection: 'How has this partnership redefined my professional identity, ethics, and civic purpose?'",
+                                abet: ["ABET 4", "ABET 7"],
+                                cas: ["CAS 3", "CAS 2", "CAS 5"],
+                                b150: ["B150: 3.4.7", "B150: 3.4.2", "B150: 12.2.1"],
+                                exemplars: {
+                                    stem: "Defending a career philosophy paper examining the ethical societal impacts of AI in engineering.",
+                                    nonstem: "Authoring a public reflective essay on ethics and social agency in corporate governance.",
+                                    cocurricular: "Publishing a capstone leadership narrative mapping civic identity for badging."
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                quadrant: "QUADRANT D: IMPACT & DISSEMINATION",
+                elements: [
+                    {
+                        id: "real_world",
+                        title: "7. Real-World Application",
+                        rationale: "Serving as a Force for Good: Translates academic study into tangible civic, industry, and community impact through live partnerships.",
+                        b150_ref: "Pillar 3 (Tactic 3.4.3) & Pillar 12 (Tactic 12.2)",
+                        tiers: {
+                            foundational: {
+                                score: 1,
+                                title: "Foundational (Introduce)",
+                                desc: "Hypothetical or simulated real-world scenarios with predefined parameters and low-stakes external connection.",
+                                abet: ["ABET 1", "ABET 2"],
+                                cas: ["CAS 6", "CAS 1"],
+                                b150: ["B150: 3.4.3"],
+                                exemplars: {
+                                    stem: "Solving simulated engineering case studies modeled on real municipal bridge failures.",
+                                    nonstem: "Analyzing simulated stock portfolios using live market data in business finance.",
+                                    cocurricular: "Participating in tabletop leadership simulation exercises for disaster response."
+                                }
+                            },
+                            applied: {
+                                score: 2,
+                                title: "Applied (Practice / Apply)",
+                                desc: "Active projects with a live stakeholder; solving a defined real-world problem with direct external consequences.",
+                                abet: ["ABET 1", "ABET 2"],
+                                cas: ["CAS 6", "CAS 5"],
+                                b150: ["B150: 3.4.3", "B150: 12.2.1"],
+                                exemplars: {
+                                    stem: "Designing an automated inventory tracking tool for a local non-profit food bank.",
+                                    nonstem: "Creating a social media marketing campaign executed for a regional small business.",
+                                    cocurricular: "Coordinating a community clean-up logistics plan executed with city park directors."
+                                }
+                            },
+                            integrated: {
+                                score: 3,
+                                title: "Integrated (Co-Create / Transform)",
+                                desc: "Unscripted partnership; students navigate the full ambiguity of a live professional or civic ecosystem.",
+                                abet: ["ABET 1", "ABET 2", "ABET 4"],
+                                cas: ["CAS 6", "CAS 5", "CAS 1"],
+                                b150: ["B150: 3.4.3", "B150: 12.2.1"],
+                                exemplars: {
+                                    stem: "Deploying production-grade solar power monitoring units installed at regional municipal sites.",
+                                    nonstem: "Drafting active commercial contracts or zoning policy proposals adopted by county commissioners.",
+                                    cocurricular: "Establishing permanent community assistance programs sustained by ongoing endowment grants."
+                                }
+                            }
+                        }
+                    },
+                    {
+                        id: "demonstration",
+                        title: "8. Public Demonstration",
+                        rationale: "Demonstrated Public Impact: Makes the hidden work of the university visible through public defenses, portfolios, and dissemination.",
+                        b150_ref: "Pillar 1 (Tactic 1.3), Pillar 3 (Tactic 3.3.5) & Pillar 12 (Tactic 12.2.4)",
+                        tiers: {
+                            foundational: {
+                                score: 1,
+                                title: "Foundational (Introduce)",
+                                desc: "Presentation to classroom peers and faculty to demonstrate baseline competence and communication.",
+                                abet: ["ABET 3"],
+                                cas: ["CAS 1", "CAS 4"],
+                                b150: ["B150: 1.3"],
+                                exemplars: {
+                                    stem: "Presenting lab findings using poster slides during internal departmental poster sessions.",
+                                    nonstem: "Delivering a 5-minute oral presentation on term paper findings to classmates.",
+                                    cocurricular: "Presenting event recap slides to executive committee officers."
+                                }
+                            },
+                            applied: {
+                                score: 2,
+                                title: "Applied (Practice / Apply)",
+                                desc: "Presentation to a community partner or specific external stakeholder for feedback and formal evaluation.",
+                                abet: ["ABET 3"],
+                                cas: ["CAS 1", "CAS 6"],
+                                b150: ["B150: 1.3", "B150: 12.2.4"],
+                                exemplars: {
+                                    stem: "Presenting prototype design solutions directly to corporate industry capstone sponsors.",
+                                    nonstem: "Pitching marketing proposals to client leadership during formal board meetings.",
+                                    cocurricular: "Defending student organization budget requests before campus funding boards."
+                                }
+                            },
+                            integrated: {
+                                score: 3,
+                                title: "Integrated (Co-Create / Transform)",
+                                desc: "Public defense, publication, or dissemination to an external professional body to influence policy or practice.",
+                                abet: ["ABET 3", "ABET 4"],
+                                cas: ["CAS 1", "CAS 6", "CAS 5"],
+                                b150: ["B150: 1.3", "B150: 12.2.4", "B150: 12.2.1"],
+                                exemplars: {
+                                    stem: "Defending senior capstone projects at national engineering conferences or public expos.",
+                                    nonstem: "Publishing research white papers featured in major regional media or industry journals.",
+                                    cocurricular: "Testifying on community service outcomes before city council or state legislative hearings."
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        ];
+
+        // INITIALIZATION ON DOMAIN LOAD
+        document.addEventListener("DOMContentLoaded", () => {
+            renderMatrixGrid();
+            renderDiagnosticControls();
+            renderCrosswalkFilterButtons();
+            populateBuilderSelects();
+            initRadarChart();
+            generateAllOutputs();
+            lucide.createIcons();
+        });
+
+        // OVERLAY MODE SWITCHER
+        function handleOverlayModeChange() {
+            activeOverlayMode = document.getElementById("overlayModeSelect").value;
+            renderMatrixGrid();
+            renderCrosswalkGrid();
+            lucide.createIcons();
+        }
+
+        // RENDER INTERACTIVE HIP MATRIX GRID (VIEW 1)
+        function renderMatrixGrid() {
+            const container = document.getElementById("matrixGridContainer");
+            container.innerHTML = "";
+
+            HIPS_DATA.forEach(quadrant => {
+                const qHeader = document.createElement("div");
+                qHeader.className = "bg-tamu-dark text-white p-3.5 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center justify-between border-l-4 border-tamu-gold shadow-sm";
+                qHeader.innerHTML = `
+                    <span>${quadrant.quadrant}</span>
+                    <span class="text-[10px] bg-tamu-gold text-tamu-dark font-black px-2 py-0.5 rounded">2 Quality Elements</span>
+                `;
+                container.appendChild(qHeader);
+
+                const grid = document.createElement("div");
+                grid.className = "grid grid-cols-1 md:grid-cols-2 gap-4";
+
+                quadrant.elements.forEach(elem => {
+                    const currentTierKey = getTierKeyFromScore(currentScores[elem.id]);
+                    const currentTier = elem.tiers[currentTierKey];
+                    const isMatching = activeAccreditationFilter && matchesFilter(elem, currentTier);
+
+                    const cell = document.createElement("div");
+                    cell.id = `matrix-cell-${elem.id}`;
+                    cell.className = `bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-4 cursor-pointer relative ${isMatching ? 'is-matching-cell' : ''} ${activeAccreditationFilter && !isMatching ? 'is-dimmed-cell' : ''}`;
+                    cell.onclick = () => openDrawer(elem.id);
+
+                    // Badge rendering based on overlay mode
+                    let badgeHTML = "";
+                    if (activeOverlayMode === "ALL" || activeOverlayMode === "ABET") {
+                        currentTier.abet.forEach(code => { badgeHTML += `<span class="badge-tag badge-abet">${code}</span>`; });
+                    }
+                    if (activeOverlayMode === "ALL" || activeOverlayMode === "CAS") {
+                        currentTier.cas.forEach(code => { badgeHTML += `<span class="badge-tag badge-cas">${code}</span>`; });
+                    }
+                    if (activeOverlayMode === "ALL" || activeOverlayMode === "B150") {
+                        currentTier.b150.forEach(code => { badgeHTML += `<span class="badge-tag badge-b150">${code}</span>`; });
+                    }
+
+                    cell.innerHTML = `
+                        <div class="space-y-2">
+                            <div class="flex items-start justify-between gap-2">
+                                <h4 class="text-sm font-bold text-tamu-maroon m-0">${elem.title}</h4>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 shrink-0">
+                                    Score: ${currentScores[elem.id]}/3
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-600 leading-relaxed m-0">${elem.rationale}</p>
+                            <div class="text-[11px] font-semibold text-amber-900 bg-amber-50 p-2 rounded border border-amber-200">
+                                <span class="font-bold">Active Tier (${currentTier.title}):</span> ${currentTier.desc}
+                            </div>
+                        </div>
+
+                        <div>
+                            ${activeOverlayMode !== "PEDAGOGICAL" ? `<div class="flex flex-wrap gap-1 mt-1 pt-2 border-t border-slate-100">${badgeHTML}</div>` : ''}
+                            <div class="mt-3 flex justify-end">
+                                <span class="text-xs font-bold text-tamu-maroon hover:underline flex items-center gap-1">
+                                    Inspect & Edit Tiers <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(cell);
+                });
+
+                container.appendChild(grid);
+            });
+        }
+
+        // RENDER FIDELITY DIAGNOSTIC CONTROLS (VIEW 2)
+        function renderDiagnosticControls() {
+            const container = document.getElementById("quadrantsDiagnosticContainer");
+            container.innerHTML = "";
+
+            HIPS_DATA.forEach(quadrant => {
+                const box = document.createElement("div");
+                box.className = "bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4";
+                
+                let elementsHTML = "";
+                quadrant.elements.forEach(elem => {
+                    elementsHTML += `
+                        <div class="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div>
+                                    <h4 class="text-xs font-bold text-slate-900 m-0">${elem.title}</h4>
+                                    <p class="text-[11px] text-slate-500 m-0 mt-0.5">${elem.rationale}</p>
+                                </div>
+                                <select onchange="updateElementScore('${elem.id}', this.value)" class="text-xs font-bold bg-white text-tamu-maroon border border-slate-300 rounded px-2.5 py-1.5 focus:ring-2 focus:ring-tamu-maroon focus:outline-none cursor-pointer shrink-0">
+                                    <option value="0" ${currentScores[elem.id] === 0 ? 'selected' : ''}>0: Non-Compliant / Below</option>
+                                    <option value="1" ${currentScores[elem.id] === 1 ? 'selected' : ''}>1: Foundational (Introduce)</option>
+                                    <option value="2" ${currentScores[elem.id] === 2 ? 'selected' : ''}>2: Applied (Practice)</option>
+                                    <option value="3" ${currentScores[elem.id] === 3 ? 'selected' : ''}>3: Integrated (Transform)</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                box.innerHTML = `
+                    <h4 class="text-xs font-black uppercase tracking-wider text-tamu-maroon border-b border-slate-200 pb-2 m-0">${quadrant.quadrant}</h4>
+                    <div class="space-y-3">${elementsHTML}</div>
+                `;
+                container.appendChild(box);
+            });
+        }
+
+        // UPDATE ELEMENT SCORE & REFRESH RADAR
+        function updateElementScore(id, val) {
+            currentScores[id] = parseInt(val);
+            updateRadarChart();
+            renderMatrixGrid();
+            generateAllOutputs();
+            lucide.createIcons();
+        }
+
+        function resetScores() {
+            Object.keys(currentScores).forEach(key => currentScores[key] = 0);
+            renderDiagnosticControls();
+            updateRadarChart();
+            renderMatrixGrid();
+            generateAllOutputs();
+            lucide.createIcons();
+        }
+
+        // CHART.JS RADAR INITIALIZATION
+        function initRadarChart() {
+            const ctx = document.getElementById("hipsRadarChart").getContext("2d");
+            hipsRadarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: [
+                        'Interactions',
+                        'Feedback',
+                        'Time & Effort',
+                        'Expectations',
+                        'Diversity',
+                        'Reflection',
+                        'Real-World',
+                        'Demonstration'
+                    ],
+                    datasets: [{
+                        label: 'Course Fidelity Level (0 - 3)',
+                        data: [
+                            currentScores.interactions,
+                            currentScores.feedback,
+                            currentScores.time_effort,
+                            currentScores.expectations,
+                            currentScores.diversity,
+                            currentScores.reflection,
+                            currentScores.real_world,
+                            currentScores.demonstration
+                        ],
+                        backgroundColor: 'rgba(80, 0, 0, 0.25)',
+                        borderColor: '#500000',
+                        borderWidth: 2.5,
+                        pointBackgroundColor: '#C59B27',
+                        pointBorderColor: '#ffffff',
+                        pointHoverBackgroundColor: '#ffffff',
+                        pointHoverBorderColor: '#500000',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        r: {
+                            min: 0,
+                            max: 3,
+                            ticks: { stepSize: 1, display: true, backdropColor: 'transparent' },
+                            grid: { color: '#e2e8f0' },
+                            angleLines: { color: '#cbd5e1' },
+                            pointLabels: { font: { size: 10, weight: 'bold' }, color: '#334155' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+            updateRadarChart();
+        }
+
+        function updateRadarChart() {
+            if (!hipsRadarChartInstance) return;
+            const dataArr = [
+                currentScores.interactions,
+                currentScores.feedback,
+                currentScores.time_effort,
+                currentScores.expectations,
+                currentScores.diversity,
+                currentScores.reflection,
+                currentScores.real_world,
+                currentScores.demonstration
+            ];
+            hipsRadarChartInstance.data.datasets[0].data = dataArr;
+            hipsRadarChartInstance.update();
+
+            const totalScore = dataArr.reduce((a, b) => a + b, 0);
+            document.getElementById("totalScoreText").innerHTML = `${totalScore} <span class="text-xs font-normal text-slate-400">/ 24</span>`;
+
+            const scopeBadge = document.getElementById("scopeBadge");
+            if (totalScore < 8) {
+                scopeBadge.className = "text-xs font-bold px-2.5 py-1 rounded bg-slate-700 text-slate-300 mt-0.5 inline-block";
+                scopeBadge.innerText = "Below Threshold (< 8 pts)";
+            } else if (totalScore <= 13) {
+                scopeBadge.className = "text-xs font-bold px-2.5 py-1 rounded bg-blue-900 text-blue-200 border border-blue-700 mt-0.5 inline-block";
+                scopeBadge.innerText = "Scope 1 (Internal / Safety Net)";
+            } else if (totalScore <= 19) {
+                scopeBadge.className = "text-xs font-bold px-2.5 py-1 rounded bg-amber-900 text-amber-200 border border-amber-700 mt-0.5 inline-block";
+                scopeBadge.innerText = "Scope 2 (Campus / Partner Agreement)";
+            } else {
+                scopeBadge.className = "text-xs font-bold px-2.5 py-1 rounded bg-emerald-900 text-emerald-200 border border-emerald-700 mt-0.5 inline-block";
+                scopeBadge.innerText = "Scope 3 (External / Institutional)";
+            }
+        }
+
+        // RENDER ACCREDITATION FILTER BUTTONS (VIEW 3)
+        function renderCrosswalkFilterButtons() {
+            const abetContainer = document.getElementById("abetFilterButtons");
+            abetContainer.innerHTML = "";
+            Object.keys(ABET_OUTCOMES).forEach(code => {
+                const btn = document.createElement("button");
+                btn.className = "text-xs font-bold px-3 py-1.5 rounded-lg border border-sky-300 bg-sky-50 text-sky-800 hover:bg-sky-600 hover:text-white transition-all cursor-pointer";
+                btn.innerText = code;
+                btn.onclick = () => filterByAccreditationCode(code, ABET_OUTCOMES[code]);
+                abetContainer.appendChild(btn);
+            });
+
+            const casContainer = document.getElementById("casFilterButtons");
+            casContainer.innerHTML = "";
+            Object.keys(CAS_DOMAINS).forEach(code => {
+                const btn = document.createElement("button");
+                btn.className = "text-xs font-bold px-3 py-1.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-600 hover:text-white transition-all cursor-pointer";
+                btn.innerText = code;
+                btn.onclick = () => filterByAccreditationCode(code, CAS_DOMAINS[code]);
+                casContainer.appendChild(btn);
+            });
+
+            const b150Container = document.getElementById("b150FilterButtons");
+            b150Container.innerHTML = "";
+            Object.keys(B150_TACTICS).forEach(code => {
+                const btn = document.createElement("button");
+                btn.className = "text-xs font-bold px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 hover:bg-tamu-maroon hover:text-white transition-all cursor-pointer";
+                btn.innerText = code;
+                btn.onclick = () => filterByAccreditationCode(code, B150_TACTICS[code]);
+                b150Container.appendChild(btn);
+            });
+        }
+
+        function filterByAccreditationCode(code, label) {
+            activeAccreditationFilter = code;
+
+            const banner = document.getElementById("filterStatusBanner");
+            banner.classList.remove("hidden");
+            document.getElementById("bannerFilterTitle").innerText = `${code}: ${label}`;
+
+            renderMatrixGrid();
+            renderCrosswalkGrid();
+            lucide.createIcons();
+        }
+
+        function clearAccreditationFilter() {
+            activeAccreditationFilter = null;
+            document.getElementById("filterStatusBanner").classList.add("hidden");
+            renderMatrixGrid();
+            renderCrosswalkGrid();
+            lucide.createIcons();
+        }
+
+        function matchesFilter(elem, tier) {
+            if (!activeAccreditationFilter) return false;
+            return tier.abet.includes(activeAccreditationFilter) ||
+                   tier.cas.includes(activeAccreditationFilter) ||
+                   tier.b150.includes(activeAccreditationFilter);
+        }
+
+        function renderCrosswalkGrid() {
+            const container = document.getElementById("crosswalkGridContainer");
+            container.innerHTML = "";
+
+            if (!activeAccreditationFilter) {
+                document.getElementById("crosswalkSummary").innerHTML = `
+                    <span class="text-xs sm:text-sm font-medium text-amber-900">Select an outcome button above to filter matrix cells.</span>
+                `;
+                return;
+            }
+
+            let matchesCount = 0;
+            HIPS_DATA.forEach(quadrant => {
+                quadrant.elements.forEach(elem => {
+                    Object.keys(elem.tiers).forEach(tierKey => {
+                        const tier = elem.tiers[tierKey];
+                        if (matchesFilter(elem, tier)) {
+                            matchesCount++;
+                            const card = document.createElement("div");
+                            card.className = "bg-white p-4 rounded-xl border border-amber-300 shadow-sm space-y-2 cursor-pointer hover:shadow-md transition-all";
+                            card.onclick = () => openDrawer(elem.id);
+                            card.innerHTML = `
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-tamu-maroon text-white">${elem.title}</span>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900">${tier.title}</span>
+                                </div>
+                                <p class="text-xs text-slate-800 font-medium leading-relaxed m-0">${tier.desc}</p>
+                            `;
+                            container.appendChild(card);
+                        }
+                    });
+                });
+            });
+
+            document.getElementById("crosswalkSummary").innerHTML = `
+                <span class="text-xs sm:text-sm font-bold text-amber-900">
+                    Found ${matchesCount} matching matrix tier cell(s) for ${activeAccreditationFilter}.
+                </span>
+            `;
+        }
+
+        // BUILDER & EXPORT GENERATOR (VIEW 4)
+        function populateBuilderSelects() {
+            const select = document.getElementById("exportElementSelect");
+            select.innerHTML = "";
+            HIPS_DATA.forEach(quadrant => {
+                quadrant.elements.forEach(elem => {
+                    const opt = document.createElement("option");
+                    opt.value = elem.id;
+                    opt.innerText = elem.title;
+                    select.appendChild(opt);
+                });
+            });
+        }
+
+        function generateAllOutputs() {
+            const courseTitle = document.getElementById("exportCourseTitle").value || "Course Framework";
+            const elemId = document.getElementById("exportElementSelect").value || "interactions";
+            const tierKey = document.getElementById("exportTierSelect").value || "applied";
+            const trackKey = document.getElementById("exportTrackSelect").value || "stem";
+
+            let selectedElem = null;
+            HIPS_DATA.forEach(q => {
+                q.elements.forEach(e => { if (e.id === elemId) selectedElem = e; });
+            });
+            if (!selectedElem) return;
+
+            const tier = selectedElem.tiers[tierKey];
+            const exemplarText = tier.exemplars[trackKey];
+
+            // 1. Comprehensive Report Summary Text
+            const reportText = `===============================================================
+TAMU HIGH-IMPACT PRACTICES (HIPs) COURSE ACCREDITATION REPORT
+===============================================================
+Course Title: ${courseTitle}
+Target Quality Element: ${selectedElem.title}
+Fidelity Tier: ${tier.title}
+Disciplinary Context: ${trackKey.toUpperCase()}
+
+COURSE FIDELITY SCORE & SCOPE TIER:
+---------------------------------------------------------------
+Total Score: ${Object.values(currentScores).reduce((a,b)=>a+b,0)} / 24 Points
+Governance Scope: ${document.getElementById("scopeBadge").innerText}
+
+MAPPED ACCREDITATION & STRATEGIC PLAN CODES:
+---------------------------------------------------------------
+ABET Outcomes: ${tier.abet.join(", ") || "None"}
+CAS Domains: ${tier.cas.join(", ") || "None"}
+Beyond 150 Tactics: ${tier.b150.join(", ") || "None"}
+
+PEDAGOGICAL DESCRIPTOR:
+---------------------------------------------------------------
+${tier.desc}
+
+DISCIPLINARY EXEMPLAR:
+---------------------------------------------------------------
+${exemplarText}
+===============================================================`;
+            document.getElementById("reportSummaryCode").innerText = reportText;
+
+            // 2. Canvas Visual Preview & Snippet
+            document.getElementById("previewBadgeTier").innerText = tier.title.toUpperCase();
+            document.getElementById("canvasVisualPreview").innerHTML = `
+                <div class="space-y-2 text-xs text-slate-800">
+                    <div class="font-bold text-tamu-maroon text-sm">${selectedElem.title}</div>
+                    <p class="m-0 leading-relaxed">${tier.desc}</p>
+                    <div class="bg-slate-50 p-2.5 rounded border border-slate-200 text-[11px] text-slate-700">
+                        <span class="font-bold text-slate-900">Activity Blueprint:</span> ${exemplarText}
+                    </div>
+                    <div class="flex flex-wrap gap-1 pt-1">
+                        ${tier.abet.map(c => `<span class="badge-tag badge-abet">${c}</span>`).join('')}
+                        ${tier.cas.map(c => `<span class="badge-tag badge-cas">${c}</span>`).join('')}
+                        ${tier.b150.map(c => `<span class="badge-tag badge-b150">${c}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+
+            const rawHTML = `<div style="border: 2px solid #500000; border-radius: 8px; padding: 16px; background-color: #ffffff; font-family: sans-serif;">
+  <div style="background-color: #500000; color: #ffffff; padding: 8px 12px; font-weight: bold; font-size: 14px; border-radius: 4px; margin-bottom: 12px;">
+    ${courseTitle} — High-Impact Learning Framework
+  </div>
+  <p style="font-size: 13px; color: #1e293b; margin-bottom: 8px;"><strong>${selectedElem.title}:</strong> ${tier.desc}</p>
+  <p style="font-size: 12px; color: #475569; background-color: #f8fafc; padding: 8px; border-radius: 4px;"><strong>Activity Focus:</strong> ${exemplarText}</p>
+</div>`;
+            document.getElementById("canvasSnippetCode").innerText = rawHTML;
+
+            // 3. JSON Payload
+            const jsonPayload = {
+                course: courseTitle,
+                element: selectedElem.title,
+                tier: tier.title,
+                score_summary: {
+                    total_score: Object.values(currentScores).reduce((a,b)=>a+b,0),
+                    max_score: 24,
+                    scope_tier: document.getElementById("scopeBadge").innerText
+                },
+                accreditation_mappings: {
+                    abet_outcomes: tier.abet,
+                    cas_domains: tier.cas,
+                    beyond150_tactics: tier.b150
+                },
+                pedagogical_descriptor: tier.desc,
+                exemplar: exemplarText
+            };
+            document.getElementById("jsonPayloadCode").innerText = JSON.stringify(jsonPayload, null, 2);
+        }
+
+        // INSPECTOR DRAWER MODAL LOGIC
+        function openDrawer(elemId) {
+            activeDrawerElementId = elemId;
+            let elem = null;
+            let quadrantTitle = "";
+            HIPS_DATA.forEach(q => {
+                q.elements.forEach(e => {
+                    if (e.id === elemId) {
+                        elem = e;
+                        quadrantTitle = q.quadrant;
+                    }
+                });
+            });
+            if (!elem) return;
+
+            document.getElementById("drawerQuadrantBadge").innerText = quadrantTitle;
+            document.getElementById("drawerB150Badge").innerText = elem.b150_ref;
+            document.getElementById("drawerTitle").innerText = elem.title;
+            document.getElementById("drawerRationale").innerText = elem.rationale;
+
+            // Render Selector Buttons inside Drawer
+            const selectorContainer = document.getElementById("drawerLevelSelector");
+            selectorContainer.innerHTML = "";
+            const currentScore = currentScores[elemId];
+
+            ["foundational", "applied", "integrated"].forEach((tierKey, idx) => {
+                const btn = document.createElement("button");
+                btn.className = `text-xs font-bold py-2 px-3 rounded-lg border transition-all cursor-pointer ${currentScore === (idx + 1) ? 'bg-tamu-maroon text-white border-tamu-maroon' : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200'}`;
+                btn.innerText = `Level ${idx + 1}: ${tierKey.charAt(0).toUpperCase() + tierKey.slice(1)}`;
+                btn.onclick = () => {
+                    updateElementScore(elemId, idx + 1);
+                    openDrawer(elemId); // Refresh drawer
+                };
+                selectorContainer.appendChild(btn);
+            });
+
+            const activeTierKey = getTierKeyFromScore(currentScore);
+            const activeTier = elem.tiers[activeTierKey];
+
+            document.getElementById("drawerLevelBadge").innerText = activeTier.title;
+            document.getElementById("drawerDescriptor").innerText = activeTier.desc;
+
+            // Render Badges inside Drawer
+            const badgesContainer = document.getElementById("drawerBadgesContainer");
+            badgesContainer.innerHTML = "";
+            activeTier.abet.forEach(c => badgesContainer.innerHTML += `<span class="badge-tag badge-abet">${c}: ${ABET_OUTCOMES[c] || ''}</span>`);
+            activeTier.cas.forEach(c => badgesContainer.innerHTML += `<span class="badge-tag badge-cas">${c}: ${CAS_DOMAINS[c] || ''}</span>`);
+            activeTier.b150.forEach(c => badgesContainer.innerHTML += `<span class="badge-tag badge-b150">${c}: ${B150_TACTICS[c] || ''}</span>`);
+
+            document.getElementById("drawerExemplarStem").innerText = activeTier.exemplars.stem;
+            document.getElementById("drawerExemplarNonStem").innerText = activeTier.exemplars.nonstem;
+            document.getElementById("drawerExemplarCocurricular").innerText = activeTier.exemplars.cocurricular;
+
+            document.getElementById("cellDrawerModal").classList.remove("hidden");
+            lucide.createIcons();
+        }
+
+        function closeDrawer() {
+            document.getElementById("cellDrawerModal").classList.add("hidden");
+        }
+
+        function sendDrawerToExport() {
+            if (activeDrawerElementId) {
+                document.getElementById("exportElementSelect").value = activeDrawerElementId;
+                switchTab("builder");
+                closeDrawer();
+            }
+        }
+
+        function getTierKeyFromScore(score) {
+            if (score <= 1) return "foundational";
+            if (score === 2) return "applied";
+            return "integrated";
+        }
+
+        // TAB SWITCHING LOGIC
+        function switchTab(tabId) {
+            const tabs = ["matrix", "diagnostic", "crosswalk", "builder"];
+            tabs.forEach(t => {
+                document.getElementById(`view-${t}`).classList.add("hidden");
+                const btn = document.getElementById(`tab-${t}`);
+                btn.className = "tab-btn inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-tamu-maroon hover:bg-slate-50";
+            });
+
+            document.getElementById(`view-${tabId}`).classList.remove("hidden");
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.className = "tab-btn active inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all text-tamu-maroon bg-slate-100 border-b-2 border-tamu-maroon shadow-sm";
+
+            if (tabId === "diagnostic" && hipsRadarChartInstance) {
+                hipsRadarChartInstance.resize();
+            }
+            lucide.createIcons();
+        }
+
+        // GLOBAL SEARCH ENGINE
+        function handleSearch() {
+            const query = document.getElementById("globalSearch").value.toLowerCase().trim();
+            const btnClear = document.getElementById("btnClearSearch");
+
+            if (query.length > 0) {
+                btnClear.classList.remove("hidden");
+                activeAccreditationFilter = query;
+            } else {
+                btnClear.classList.add("hidden");
+                activeAccreditationFilter = null;
+            }
+            renderMatrixGrid();
+            renderCrosswalkGrid();
+            lucide.createIcons();
+        }
+
+        function clearSearch() {
+            document.getElementById("globalSearch").value = "";
+            handleSearch();
+        }
+
+        // CLIPBOARD TOAST HELPER
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Copied to Clipboard", "Data successfully copied to your clipboard.");
+            });
+        }
+
+        function showToast(title, desc) {
+            const toast = document.getElementById("toastNotification");
+            document.getElementById("toastTitle").innerText = title;
+            document.getElementById("toastDesc").innerText = desc;
+            toast.classList.remove("toast-enter");
+            toast.classList.add("toast-show");
+            setTimeout(() => {
+                toast.classList.remove("toast-show");
+                toast.classList.add("toast-enter");
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
